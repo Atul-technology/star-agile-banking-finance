@@ -1,10 +1,11 @@
 pipeline {
     agent any
-    tools {
-        maven 'Apache Maven 3.8.7'
-    }
-    stages {
 
+    tools {
+        maven 'Apache Maven 3.8.7' // Ensure this name matches Jenkins Maven configuration
+    }
+
+    stages {
         stage('Checkout the Code from GitHub') {
             steps {
                 git url: 'https://github.com/Atul-technology/star-agile-banking-finance'
@@ -50,7 +51,7 @@ pipeline {
         stage('Docker Login Credentials') {
             steps {
                 echo 'Logging into DockerHub'
-                withCredentials([string(credentialsId: 'dockerhubpassword', variable: 'dockerpass')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhubpassword', usernameVariable: 'dockerhubusername', passwordVariable: 'dockerhubuserpw')]) {
                     sh "docker login -u ${dockerhubusername} -p ${dockerhubuserpw}"
                 }
             }
