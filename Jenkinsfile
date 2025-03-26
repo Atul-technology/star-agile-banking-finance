@@ -1,7 +1,7 @@
 pipeline{
     agent any
     tools {
-           maven 'Maven3'
+           maven 'Maven' // Change 'Maven3' to 'Maven' if it's installed as Maven
          }
     stages{
         stage('checkout the code from github'){
