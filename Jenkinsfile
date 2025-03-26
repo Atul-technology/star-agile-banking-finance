@@ -1,51 +1,54 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-      stage('Git checkout'){
-          steps {
-            echo 'this is for cloning git repo'
-            git url:'https://github.com/Atul-technology/star-agile-banking-finance'
-          }
-        }
-     stage('Maven package'){
-          steps {
-            echo 'this is for packaging the application'
-            sh 'mvn package'
-          }
-        }
-     stage('Test Results'){
-          steps {
-            echo 'this is for generating test Results'
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: '/var/lib/jenkins/workspace/BankingProject/target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
-          }
-        }
-     stage('Docker image creation'){
-          steps {
-            echo 'this is for Docker image build'
-            sh 'docker build -t atul0074/bankingproject:latest .'
-          }
-        }
-     stage('Login to DockerHub'){
-          steps {
-            echo 'this is for Login Dockerhub'
-            withCredentials([usernamePassword(credentialsId: 'dockerid', passwordVariable: 'dockerpass', usernameVariable: 'dockeruser')]) {
-            sh 'docker login -u ${dockeruser} -p ${dockerpass}'
+    tools {
+        maven 'Maven 3' // Ensure Maven is configured in Jenkins
+    }
+    stages {
+        stage('Git checkout') {
+            steps {
+                echo 'Cloning the Git repository'
+                git url: 'https://github.com/Atul-technology/star-agile-banking-finance'
             }
-          }
         }
-     stage('Push Docker image'){
-          steps {
-            echo 'this is for Pushing Docker image'
-            sh 'docker push atul0074/bankingproject:latest'
-          }
+        stage('Maven package') {
+            steps {
+                echo 'Packaging the application using Maven'
+                sh 'mvn clean package'
+            }
         }
-     stage('Deploy with ansible'){
-          steps {
-            echo 'this is for ansible'
-           ansiblePlaybook credentialsId: 'sshkey', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'deploy.yml', vaultTmpPath: ''
-          }
+        stage('Test Results') {
+            steps {
+                echo 'Generating Test Results'
+                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, reportDir: 'target/surefire-reports', 
+                              reportFiles: 'index.html', reportName: 'Test Report'])
+            }
         }
-     }
-   }
-
-   
+        stage('Docker image creation') {
+            steps {
+                echo 'Building Docker image'
+                sh 'docker build -t atul0074/bankingproject:latest .'
+            }
+        }
+        stage('Login to DockerHub') {
+            steps {
+                echo 'Logging in to DockerHub'
+                withCredentials([usernamePassword(credentialsId: 'dockerid', passwordVariable: 'dockerpass', usernameVariable: 'dockeruser')]) {
+                    sh 'echo ${dockerpass} | docker login -u ${dockeruser} --password-stdin'
+                }
+            }
+        }
+        stage('Push Docker image') {
+            steps {
+                echo 'Pushing Docker image to DockerHub'
+                sh 'docker push atul0074/bankingproject:latest'
+            }
+        }
+        stage('Deploy with Ansible') {
+            steps {
+                echo 'Deploying using Ansible'
+                ansiblePlaybook credentialsId: 'sshkey', disableHostKeyChecking: true, installation: 'ansible', 
+                inventory: '/etc/ansible/hosts', playbook: 'deploy.yml'
+            }
+        }
+    }
+}
