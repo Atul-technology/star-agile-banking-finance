@@ -25,7 +25,7 @@ pipeline{
      stage('Docker image creation'){
           steps {
             echo 'this is for Docker image build'
-            sh 'docker build -t aruntvv/bankingproject:latest .'
+            sh 'docker build -t atul0074/bankingproject:latest .'
           }
         }
      stage('Login to DockerHub'){
@@ -39,7 +39,7 @@ pipeline{
      stage('Push Docker image'){
           steps {
             echo 'this is for Pushing Docker image'
-            sh 'docker push aruntvv/bankingproject:latest'
+            sh 'docker push atul0074/bankingproject:latest'
           }
         }
      stage('Deploy with ansible'){
