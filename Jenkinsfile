@@ -7,7 +7,7 @@ pipeline{
       stage('Git checkout'){
           steps {
             echo 'this is for cloning git repo'
-            git url:'https://github.com/ArunTvv/Banking-java-project.git'
+            git url:'https://github.com/Atul-technology/star-agile-banking-finance'
           }
         }
      stage('Maven package'){
