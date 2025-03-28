@@ -2,72 +2,83 @@ pipeline {
     agent any
 
     tools {
-        maven 'Apache Maven 3.8.7' // Ensure this name matches Jenkins Maven configuration
+        maven 'Apache Maven 3.8.7' // Ensure this matches Jenkins Maven configuration
+    }
+
+    environment {
+        DOCKER_IMAGE = 'atul0074/bankingproject:latest'
     }
 
     stages {
-        stage('Checkout the Code from GitHub') {
+        stage('Checkout Code') {
             steps {
+                echo 'Cloning repository from GitHub...'
                 git url: 'https://github.com/Atul-technology/star-agile-banking-finance'
-                echo 'GitHub repository checked out'
             }
         }
 
-        stage('Code Compile with Atul') {
+        stage('Compile Code') {
             steps {
-                echo 'Starting code compilation'
+                echo 'Compiling code...'
                 sh 'mvn compile'
             }
         }
 
-        stage('Code Testing with Atul') {
+        stage('Run Tests') {
             steps {
-                echo 'Running unit tests'
+                echo 'Running unit tests...'
                 sh 'mvn test'
             }
         }
 
-        stage('QA with Atul') {
+        stage('Code Quality Check') {
             steps {
-                echo 'Running code quality checks'
+                echo 'Running code quality checks...'
                 sh 'mvn checkstyle:checkstyle'
             }
         }
 
-        stage('Package with Atul') {
+        stage('Package Application') {
             steps {
-                echo 'Packaging application'
+                echo 'Packaging application...'
                 sh 'mvn clean package'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image'
-                sh 'docker build -t atul0074/bankingproject:latest .'
+                echo 'Building Docker image...'
+                sh "docker build -t $DOCKER_IMAGE ."
             }
         }
 
-        stage('Docker Login Credentials') {
+        stage('Docker Login') {
             steps {
-        echo 'Logging into DockerHub'
-        withCredentials([usernamePassword(credentialsId: 'dockerhubpassword', usernameVariable: 'dockerhubusername', passwordVariable: 'dockerhubuserpw')]) {
-            sh "docker login -u ${dockerhubusername} -p ${dockerhubuserpw}"
+                echo 'Logging into DockerHub...'
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhubusername', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
+                ]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
 
-        stage('Image Push to DockerHub') {
+        stage('Push Image to DockerHub') {
             steps {
-                echo 'Pushing Docker image to DockerHub'
-                sh 'docker push atul0074/bankingproject:latest'
+                echo 'Pushing Docker image to DockerHub...'
+                sh "docker push $DOCKER_IMAGE"
             }
         }
 
-        stage('Deploy Application using Ansible') {
+        stage('Deploy Using Ansible') {
             steps {
-                echo 'Deploying application using Ansible playbook'
-                ansiblePlaybook credentialsId: 'private-key', disableHostKeyChecking: true, installation: 'Ansible2', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml', vaultTmpPath: ''
+                echo 'Deploying application using Ansible playbook...'
+                ansiblePlaybook become: true, 
+                                credentialsId: 'ansible', 
+                                disableHostKeyChecking: true, 
+                                installation: 'ansible', 
+                                inventory: '/etc/ansible/hosts', 
+                                playbook: 'ansible-playbook.yml'
             }
         }
     }
